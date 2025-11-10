@@ -1,6 +1,6 @@
 #pragma once
 
-namespace nartherion::gcc {
+namespace nartherion::gcc::arrival_time_filter {
 
 class KalmanFilter final {
 public:
@@ -24,7 +24,6 @@ private:
 
     constexpr static auto kStateNoiseVariance = 1e-3;
     constexpr static auto kMinMeasurementNoiseVariance = 1.0;
-    constexpr static auto kInitialEstimationErrorVariance = 0.1;
 
     const double filter_coefficient_;
 
@@ -33,4 +32,4 @@ private:
     double state_estimation_ = 0.0;
 };
 
-}  // namespace nartherion::gcc
+}  // namespace nartherion::gcc::arrival_time_filter

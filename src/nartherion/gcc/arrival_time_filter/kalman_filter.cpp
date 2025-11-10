@@ -4,17 +4,17 @@
 #include <cmath>
 #include <stdexcept>
 
-namespace nartherion::gcc {
+namespace nartherion::gcc::arrival_time_filter {
 
 namespace {
 
-[[nodiscard]] double CalculateKalmanGain(const double projected_estimation_error_variance,
-                                         const double measurement_noise_variance) noexcept {
+[[nodiscard]] constexpr double CalculateKalmanGain(const double projected_estimation_error_variance,
+                                                   const double measurement_noise_variance) noexcept {
     return projected_estimation_error_variance / (measurement_noise_variance + projected_estimation_error_variance);
 }
 
-[[nodiscard]] double CalculateNextEstimationErrorVariance(const double kalman_gain,
-                                                          const double projected_estimation_error_variance) noexcept {
+[[nodiscard]] constexpr double CalculateNextEstimationErrorVariance(
+    const double kalman_gain, const double projected_estimation_error_variance) noexcept {
     return (1 - kalman_gain) * projected_estimation_error_variance;
 }
 
@@ -40,12 +40,13 @@ double KalmanFilter::CalculateNextMeasurementNoiseVariance(const double innovati
     const auto smoothed_innovation = std::min(innovation, 3 * sqrt(measurement_noise_variance_));
     const auto heuristic_exponent = 30 / (1000 * highest_group_receive_rate);
     const auto weight = std::pow(1 - filter_coefficient_, heuristic_exponent);
-    return std::max(kMinMeasurementNoiseVariance,
-                    weight * measurement_noise_variance_ + (1 - weight) * pow(smoothed_innovation, 2));
+    const auto next_measurement_noise_variance =
+        weight * measurement_noise_variance_ + (1 - weight) * pow(smoothed_innovation, 2);
+    return std::max(kMinMeasurementNoiseVariance, next_measurement_noise_variance);
 }
 
 double KalmanFilter::CalculateProjectedEstimationErrorVariance() const noexcept {
     return estimation_error_variance_ + kStateNoiseVariance;
 }
 
-}  // namespace nartherion::gcc
+}  // namespace nartherion::gcc::arrival_time_filter
