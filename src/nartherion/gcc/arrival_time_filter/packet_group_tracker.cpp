@@ -1,7 +1,7 @@
 #include <nartherion/gcc/arrival_time_filter/packet_group_tracker.h>
+#include <nartherion/gcc/common/logging/logging.h>
 
 #include <chrono>
-#include <stdexcept>
 
 namespace nartherion::gcc::arrival_time_filter {
 
@@ -17,7 +17,8 @@ std::optional<InterGroupDelayVariation> PacketGroupTracker::Push(const std::chro
     }
     if (const auto& last_packet = current_->last_packet;
         departure < last_packet.departure || arrival < last_packet.arrival) {
-        throw std::logic_error{"Packet departure and arrival times should be monotonically increasing."};
+        NARTHERION_GCC_LOG_ERROR("Packet departure and arrival times should be monotonically increasing.");
+        return {};
     }
     if (IsWithinBurst(packet, *current_) || BelongsToGroup(packet, *current_)) {
         current_->last_packet = packet;

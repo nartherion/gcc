@@ -54,6 +54,7 @@ function(nartherion_gcc_set_compiler_warnings TARGET_PROJECT)
     endif()
     set(PROJECT_WARNINGS_C "${PROJECT_WARNINGS_CXX}")
 
-    target_compile_options(${TARGET_PROJECT} INTERFACE $<$<COMPILE_LANGUAGE:CXX>:${PROJECT_WARNINGS_CXX}>
-                                                       $<$<COMPILE_LANGUAGE:C>:${PROJECT_WARNINGS_C}>)
+    target_compile_options(${TARGET_PROJECT} INTERFACE
+        $<$<COMPILE_LANGUAGE:CXX>:${PROJECT_WARNINGS_CXX}>
+        $<$<COMPILE_LANGUAGE:C>:${PROJECT_WARNINGS_C}>)
 endfunction()

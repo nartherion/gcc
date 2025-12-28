@@ -1,0 +1,13 @@
+#pragma once
+
+#include <nartherion/gcc/common/logging/callback.h>
+#include <nartherion/gcc/common/logging/severity.h>
+
+#define NARTHERION_GCC_LOG(log_severity, ...)                                                      \
+    do {                                                                                           \
+        if (nartherion::gcc::common::logging::detail::g_severity >= log_severity) {                \
+            const auto location = std::source_location::current();                                 \
+            const auto message = std::format(__VA_ARGS__);                                         \
+            nartherion::gcc::common::logging::detail::g_callback(log_severity, location, message); \
+        }                                                                                          \
+    } while (false)

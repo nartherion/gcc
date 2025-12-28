@@ -5,4 +5,5 @@ endif()
 
 project(nartherion-gcc)
 set(NARTHERION_GCC_SOURCE_DIR ${nartherion-gcc_SOURCE_DIR})
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory(src)

@@ -5,10 +5,12 @@
 namespace nartherion::gcc::arrival_time_filter {
 
 struct InterGroupDelayVariation {
-    std::chrono::steady_clock::duration inter_arrival{};
-    std::chrono::steady_clock::duration inter_departure{};
+    std::chrono::steady_clock::duration inter_arrival;
+    std::chrono::steady_clock::duration inter_departure;
 
-    [[nodiscard]] constexpr double Get() const noexcept { return 0.0; }
+    [[nodiscard]] constexpr double Get() const noexcept {
+        return static_cast<double>(inter_arrival.count() - inter_departure.count());
+    }
 };
 
 }  // namespace nartherion::gcc::arrival_time_filter
