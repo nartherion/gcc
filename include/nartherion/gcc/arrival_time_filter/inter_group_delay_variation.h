@@ -8,8 +8,8 @@ struct InterGroupDelayVariation {
     std::chrono::steady_clock::duration inter_arrival;
     std::chrono::steady_clock::duration inter_departure;
 
-    [[nodiscard]] constexpr double Get() const noexcept {
-        return static_cast<double>(inter_arrival.count() - inter_departure.count());
+    [[nodiscard]] constexpr std::chrono::steady_clock::duration Get() const noexcept {
+        return inter_arrival - inter_departure;
     }
 };
 

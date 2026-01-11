@@ -8,40 +8,62 @@ namespace nartherion::gcc::arrival_time_filter {
 PacketGroupTracker::PacketGroupTracker(const Parameters& parameters) noexcept
     : burst_duration_{parameters.burst_duration} {}
 
-std::optional<InterGroupDelayVariation> PacketGroupTracker::Push(const std::chrono::steady_clock::duration departure,
-                                                                 const std::chrono::steady_clock::duration arrival) {
+std::optional<InterGroupDelayVariation> PacketGroupTracker::Push(
+    const std::chrono::steady_clock::duration departure, const std::chrono::steady_clock::duration arrival) noexcept {
     const auto packet = Packet{.departure = departure, .arrival = arrival};
     if (!current_) {
+        NARTHERION_GCC_LOG_DEBUG("Created first group (D={}, A={})", packet.departure.count(), packet.arrival.count());
         current_ = PacketGroup{.first_packet = packet, .last_packet = packet};
         return {};
     }
-    if (const auto& last_packet = current_->last_packet;
+    auto& current = *current_;
+    if (const auto& last_packet = current.last_packet;
         departure < last_packet.departure || arrival < last_packet.arrival) {
-        NARTHERION_GCC_LOG_ERROR("Packet departure and arrival times should be monotonically increasing.");
+        NARTHERION_GCC_LOG_WARNING("Packet departure or arrival time is not monotonically increasing.");
         return {};
     }
-    if (IsWithinBurst(packet, *current_) || BelongsToGroup(packet, *current_)) {
-        current_->last_packet = packet;
+    if (BelongsTo(packet, current)) {
+        NARTHERION_GCC_LOG_DEBUG("Added packet to the group (D={}, A={})", packet.departure.count(),
+                                 packet.arrival.count());
+        current.last_packet = packet;
         return {};
     }
     const auto inter_group_delay_variation = GetInterGroupDelayVariation(*current_);
     previous_ = current_;
+    NARTHERION_GCC_LOG_DEBUG("Created new group (D={}, A={})", packet.departure.count(), packet.arrival.count());
     current_ = PacketGroup{.first_packet = packet, .last_packet = packet};
     return inter_group_delay_variation;
 }
 
-bool PacketGroupTracker::IsWithinBurst(const Packet& packet, const PacketGroup& group) const noexcept {
-    return group.first_packet.departure + burst_duration_ <= packet.departure;
+InterGroupDelayVariation PacketGroupTracker::GetInterGroupDelayVariation(const Packet& previous_group_last,
+                                                                         const Packet& current_group_last) noexcept {
+    return InterGroupDelayVariation{.inter_arrival = current_group_last.arrival - previous_group_last.arrival,
+                                    .inter_departure = current_group_last.departure - previous_group_last.departure};
 }
 
-bool PacketGroupTracker::BelongsToGroup(const Packet& packet, const PacketGroup& group) const noexcept {
-    const auto& last_packet = group.last_packet;
-    const auto inter_departure = packet.departure - last_packet.departure;
-    const auto inter_arrival = packet.arrival - last_packet.arrival;
-    const auto arrived_within_single_burst = inter_arrival <= burst_duration_;
-    const auto is_negative_delay_variation =
-        inter_arrival - inter_departure < std::chrono::steady_clock::duration::zero();
-    return arrived_within_single_burst && is_negative_delay_variation;
+bool PacketGroupTracker::IsWithinBurst(const std::chrono::steady_clock::duration first,
+                                       const std::chrono::steady_clock::duration second) const noexcept {
+    return first + burst_duration_ >= second;
+}
+
+bool PacketGroupTracker::DepartedWithinBurst(const Packet& first, const Packet& second) const noexcept {
+    return IsWithinBurst(first.departure, second.departure);
+}
+
+bool PacketGroupTracker::ArrivedWithinBurst(const Packet& first, const Packet& second) const noexcept {
+    return IsWithinBurst(first.arrival, second.arrival);
+}
+
+bool PacketGroupTracker::BelongsTo(const Packet& packet, const PacketGroup& current) const noexcept {
+    if (DepartedWithinBurst(current.first_packet, packet)) {
+        return true;
+    }
+    if (!ArrivedWithinBurst(current.last_packet, packet) || !previous_) {
+        return false;
+    }
+    const auto& previous = *previous_;
+    const auto inter_group_delay_variation = GetInterGroupDelayVariation(previous.last_packet, packet).Get();
+    return inter_group_delay_variation < std::chrono::steady_clock::duration::zero();
 }
 
 std::optional<InterGroupDelayVariation> PacketGroupTracker::GetInterGroupDelayVariation(
@@ -50,8 +72,7 @@ std::optional<InterGroupDelayVariation> PacketGroupTracker::GetInterGroupDelayVa
         return {};
     }
     const auto& previous = *previous_;
-    return InterGroupDelayVariation{.inter_arrival = current.last_packet.arrival - previous.last_packet.arrival,
-                                    .inter_departure = current.last_packet.departure - previous.last_packet.departure};
+    return GetInterGroupDelayVariation(previous.last_packet, current.last_packet);
 }
 
 }  // namespace nartherion::gcc::arrival_time_filter
