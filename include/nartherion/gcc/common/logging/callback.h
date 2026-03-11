@@ -6,7 +6,7 @@
 #include <source_location>
 #include <string>
 
-namespace nartherion::gcc::common::logging {
+namespace nartherion::gcc::logging {
 
 inline void DefaultCallback(const Severity, const std::source_location, const std::string&) {}
 
@@ -20,4 +20,4 @@ inline auto g_callback = Callback{DefaultCallback};
 
 inline void SetCallback(Callback callback) { detail::g_callback = std::move(callback); }
 
-}  // namespace nartherion::gcc::common::logging
+}  // namespace nartherion::gcc::logging

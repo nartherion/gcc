@@ -2,7 +2,7 @@
 
 #include <string_view>
 
-namespace nartherion::gcc::common::logging {
+namespace nartherion::gcc::logging {
 
 enum class Severity { kDebug, kInfo, kWarning, kError };
 
@@ -33,4 +33,4 @@ inline void SetSeverity(const Severity severity) { detail::g_severity = severity
     return "UNKNOWN";
 }
 
-}  // namespace nartherion::gcc::common::logging
+}  // namespace nartherion::gcc::logging

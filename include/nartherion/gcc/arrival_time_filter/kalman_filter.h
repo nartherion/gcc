@@ -15,6 +15,8 @@ public:
     explicit KalmanFilter(const Parameters& parameters);
 
     void PushMeasurement(const double measurement, const double last_highest_receive_rate) noexcept;
+    [[nodiscard]] double GetEstimationErrorVariance() const noexcept { return estimation_error_variance_; }
+    [[nodiscard]] double GetMeasurementNoiseVariance() const noexcept { return measurement_noise_variance_; }
     [[nodiscard]] double GetEstimation() const noexcept { return state_estimation_; }
 
 private:

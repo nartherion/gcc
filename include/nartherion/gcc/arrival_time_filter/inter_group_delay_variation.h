@@ -1,16 +1,14 @@
 #pragma once
 
-#include <chrono>
+#include <nartherion/gcc/common/duration.h>
 
 namespace nartherion::gcc::arrival_time_filter {
 
 struct InterGroupDelayVariation {
-    std::chrono::steady_clock::duration inter_arrival;
-    std::chrono::steady_clock::duration inter_departure;
+    Duration inter_arrival;
+    Duration inter_departure;
 
-    [[nodiscard]] constexpr std::chrono::steady_clock::duration Get() const noexcept {
-        return inter_arrival - inter_departure;
-    }
+    [[nodiscard]] constexpr Duration Get() const noexcept { return inter_arrival - inter_departure; }
 };
 
 }  // namespace nartherion::gcc::arrival_time_filter
